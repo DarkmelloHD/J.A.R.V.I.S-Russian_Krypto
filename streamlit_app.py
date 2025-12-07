@@ -1,66 +1,66 @@
 import streamlit as st
 from datetime import datetime
-import requests  # Standard in Streamlit Cloud
+import requests
+import random
 
-# Krasses Sci-Fi-Design
-st.set_page_config(page_title="J.A.R.V.I.S.", layout="wide", initial_sidebar_state="collapsed")
+# Design
+st.set_page_config(page_title="J.A.R.V.I.S.", layout="centered")
 st.markdown("""
 <style>
-    .main {background: linear-gradient(135deg, #0e0e1f 0%, #1a1a3d 100%) !important;}
-    .stApp {background: transparent !important;}
+    .main {background: linear-gradient(135deg, #0e0e1f, #1a1a3d);}
     h1 {font-family: 'Orbitron', sans-serif; text-align: center; color: #00ffff; 
-        text-shadow: 0 0 30px #00ffff; font-size: 4rem; margin: 0;}
-    .subtitle {text-align: center; color: #00ffaa; font-size: 1.5rem; font-style: italic;}
-    .status {text-align: center; color: #ffff00; font-size: 1.2rem; font-weight: bold;}
-    .mic-btn {background: radial-gradient(circle, #4b0082, #8a2be2); color: white; 
-              padding: 20px; font-size: 2rem; border-radius: 50%; width: 200px; height: 200px; 
-              border: 3px solid #00ffff; box-shadow: 0 0 40px #00ffff; cursor: pointer; transition: all 0.3s;}
-    .mic-btn:hover {transform: scale(1.1); box-shadow: 0 0 60px #8a2be2;}
-    .output {background: rgba(0, 255, 255, 0.1); border: 1px solid #00ffff; border-radius: 10px; padding: 15px; color: #00ffaa; font-family: 'Courier New', monospace;}
+        text-shadow: 0 0 30px #00ffff; font-size: 5rem;}
+    .mic {background: #8a2be2; color: white; padding: 30px; font-size: 3rem; 
+          border-radius: 50%; width: 220px; height: 220px; border: 5px solid #00ffff;
+          box-shadow: 0 0 60px #00ffff; cursor: pointer;}
+    .mic:hover {transform: scale(1.15); box-shadow: 0 0 90px #8a2be2;}
+    .output {background: rgba(0,255,255,0.1); padding: 20px; border-radius: 15px; 
+             border: 1px solid #00ffff; color: #00ffaa; font-size: 1.3rem;}
 </style>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&display=swap" rel="stylesheet">
 """, unsafe_allow_html=True)
 
 st.markdown("<h1>J.A.R.V.I.S.</h1>", unsafe_allow_html=True)
-st.markdown("<p class='subtitle'>Just A Rather Very Intelligent System</p>", unsafe_allow_html=True)
+st.markdown("<h3 style='text-align:center; color:#00ffaa;'>Klicke & sprich – ich antworte sofort!</h3>", unsafe_allow_html=True)
 
-# Status
-st.markdown("<p class='status' id='status'>Online und bereit, Sir.</p>", unsafe_allow_html=True)
-
-# Spracherkennung + TTS im Browser (keine Bibliothek nötig)
+# JavaScript + Auto-Submit (JETZT FUNKTIONIERT ES!)
 st.markdown("""
 <script>
 const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
 recognition.lang = 'de-DE';
+recognition.interimResults = false;
+
 recognition.onresult = function(e) {
-    const command = e.results[0][0].transcript.toLowerCase();
-    document.getElementById('command').value = command;
-    document.getElementById('submit').click();
-    speakResponse('Befehl erkannt: ' + command);  // Vorschau-Sprache
+    const text = e.results[0][0].transcript;
+    document.getElementById('cmd').value = text.toLowerCase();
+    // Automatisch absenden!
+    const btn = document.getElementById('hidden_submit');
+    btn.click();
 };
-function startListening() {
+recognition.onerror = function() { parent.streamlitSetComponentValue("Fehler beim Hören"); };
+
+function start() {
     recognition.start();
-    document.getElementById('status').innerHTML = 'Ich höre zu...';
-}
-function speakResponse(text) {
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = 'de-DE';
-    utterance.rate = 1.2;
-    utterance.pitch = 0.8;
-    speechSynthesis.speak(utterance);
+    document.getElementById('status').innerHTML = "Ich höre zu...";
 }
 </script>
 """, unsafe_allow_html=True)
 
-col1, col2, col3 = st.columns([1, 2, 1])
+# Unsichtbarer Submit-Button
+if st.button("Absenden", key="hidden_submit", help="wird automatisch geklickt"):
+    pass
+
+# Großer Mikrofon-Button
+col1, col2, col3 = st.columns([1,2,1])
 with col2:
-    st.markdown('<button class="mic-btn" onclick="startListening()">🎤 SPRICH JETZT</button>', unsafe_allow_html=True)
+    st.markdown('<button class="mic" onclick="start()">SPRICH JETZT</button>', unsafe_allow_html=True)
 
-# Befehl verarbeiten
-command = st.text_input("Oder tippe hier:", key="command", label_visibility="collapsed")
-if st.button("Ausführen", key="submit", type="primary"):
-    if command:
-        command = command.lower().strip()
-        st.markdown(f"<p class='status'>Verarbeite: {command}</p>", unsafe_allow_html=True)
+st.markdown("<p id='status' style='text-align:center; color:#ffff00; font-size:1.5rem;'>Bereit</p>", unsafe_allow_html=True)
 
-        #
+# Befehl empfangen
+command = st.text_input("", key="cmd", label_visibility="collapsed").lower().strip()
+
+if command:
+    st.markdown("<p id='status' style='text-align:center; color:#00ff00;'>Verarbeite Befehl...</p>", unsafe_allow_html=True)
+
+    # Sofort-Antwort
